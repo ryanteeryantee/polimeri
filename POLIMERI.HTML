@@ -1,0 +1,116 @@
+<div class="simulation-container">
+    <h2 style="text-align: center; color: #ff7675;">🌾 Simulator Polimeri (Warna Gandum)</h2>
+    <p style="text-align: center; font-size: 14px;">Semakin banyak gen dominan (huruf kapital), warna merah semakin pekat.</p>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Induk 1 (Genotipe):</label>
+            <select id="poly_p1" onchange="updatePolimeri()">
+                <option value="M1M1M2M2">M1M1M2M2</option>
+                <option value="M1M1M2m2">M1M1M2m2</option>
+                <option value="M1M1m2M2">M1M1m2M2</option>
+                <option value="M1M1m2m2">M1M1m2m2</option>
+                <option value="M1m1M2M2">M1m1M2M2</option>
+                <option value="M1m1M2m2" selected>M1m1M2m2</option>
+                <option value="M1m1m2M2">M1m1m2M2</option>
+                <option value="M1m1m2m2">M1m1m2m2</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>Induk 2 (Genotipe):</label>
+            <select id="poly_p2" onchange="updatePolimeri()">
+                <option value="M1M1M2M2">M1M1M2M2</option>
+                <option value="M1M1M2m2">M1M1M2m2</option>
+                <option value="M1M1m2M2">M1M1m2M2</option>
+                <option value="M1M1m2m2">M1M1m2m2</option>
+                <option value="M1m1M2M2">M1m1M2M2</option>
+                <option value="M1m1M2m2" selected>M1m1M2m2</option>
+                <option value="M1m1m2M2">M1m1m2M2</option>
+                <option value="M1m1m2m2">M1m1m2m2</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive" id="polimeri-table"></div>
+    <div id="poly-summary" class="result-box-poly"></div>
+</div>
+
+<style>
+    .simulation-container { max-width: 750px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); font-family: 'Poppins', sans-serif; }
+    .controls { display: flex; gap: 15px; margin-bottom: 20px; }
+    .control-group { flex: 1; background: #fff5f5; padding: 12px; border-radius: 12px; border: 1px solid #ffe3e3; }
+    label { font-size: 14px; font-weight: 600; color: #d63031; display: block; margin-bottom: 5px; }
+    select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #fab1a0; font-size: 13px; }
+    .table-responsive { overflow-x: auto; margin-top: 15px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { border: 1px solid #ffe3e3; padding: 8px; text-align: center; }
+    th { background: #ff7675; color: white; }
+    .m4 { background: #ff4d4d; color: white; font-weight: bold; }
+    .m3 { background: #ff8080; color: white; }
+    .m2 { background: #ffb3b3; color: #444; }
+    .m1 { background: #ffe6e6; color: #444; }
+    .m0 { background: #f9f9f9; color: #999; }
+    .result-box-poly { margin-top: 20px; padding: 15px; background: #fff9f9; border-radius: 15px; border-left: 6px solid #ff7675; }
+</style>
+
+<script>
+function getGametPoly(genoStr) {
+    // Membagi genotipe menjadi pasangan alel: M1M1M2m2 -> [M1,M1], [M2,m2]
+    // Fungsi ini menangani string seperti "M1M1M2M2"
+    let m1 = [genoStr.substring(0, 2), genoStr.substring(2, 4)];
+    let m2 = [genoStr.substring(4, 6), genoStr.substring(6, 8)];
+    
+    let gametes = [];
+    for (let a of [m1[0], m1[1]]) {
+        for (let b of [m2[0], m2[1]]) {
+            let g = a + b;
+            if (!gametes.includes(g)) gametes.push(g);
+        }
+    }
+    return gametes;
+}
+
+function getPolyStyle(geno) {
+    let count = (geno.match(/[A-Z]/g) || []).length;
+    if (count === 4) return { n: 'Merah Tua', c: 'm4' };
+    if (count === 3) return { n: 'Merah', c: 'm3' };
+    if (count === 2) return { n: 'Merah Sedang', c: 'm2' };
+    if (count === 1) return { n: 'Merah Muda', c: 'm1' };
+    return { n: 'Putih', c: 'm0' };
+}
+
+function updatePolimeri() {
+    let p1 = document.getElementById('poly_p1').value;
+    let p2 = document.getElementById('poly_p2').value;
+    let gamet1 = getGametPoly(p1);
+    let gamet2 = getGametPoly(p2);
+
+    let html = `<table><tr><th>♂ \\ ♀</th>`;
+    gamet2.forEach(g => { html += `<th>${g}</th>`; });
+    html += `</tr>`;
+
+    let summary = {};
+    gamet1.forEach(g1 => {
+        html += `<tr><td style="font-weight:bold; background:#fff5f5;">${g1}</td>`;
+        gamet2.forEach(g2 => {
+            // Gabungkan 4 alel
+            let offspring = g1[0] + g2[0] + g1[1] + g2[1];
+            let res = getPolyStyle(offspring);
+            summary[res.n] = (summary[res.n] || 0) + 1;
+            html += `<td class="${res.c}">${offspring}<br><small>${res.n}</small></td>`;
+        });
+        html += `</tr>`;
+    });
+    html += `</table>`;
+
+    document.getElementById('polimeri-table').innerHTML = html;
+    let total = gamet1.length * gamet2.length;
+    let sumHtml = `<strong>Hasil Persilangan:</strong><br><ul>`;
+    for (let key in summary) {
+        sumHtml += `<li>${key}: ${((summary[key]/total)*100).toFixed(0)}%</li>`;
+    }
+    sumHtml += `</ul>`;
+    document.getElementById('poly-summary').innerHTML = sumHtml;
+}
+updatePolimeri();
+</script>
